@@ -1,0 +1,138 @@
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support import ui
+import time
+import re
+import os
+
+#print("STARTED")
+
+driver = webdriver.Firefox()
+driver.get(os.environ['OTVET_URL'])
+body = driver.find_element_by_tag_name('body')
+wait = ui.WebDriverWait(driver ,0.5)
+
+n = 0
+
+time.sleep(5)
+sended = {} 
+
+ignore = {
+  "Прочее компьютерное": 1,
+  "Прочие": 1,
+  "Железо": 1,
+  "Другие языки и технологии": 1,
+  "Клиентские": 1,
+  "Программное обеспечение": 1,
+  "Прочее компьютерное": 1,
+  "Мобильная связь": 1,
+  "Интернет": 1,
+  "Прочее фото-видео": 1,
+  "Кино, Театр": 1,
+  "Музыка": 1,
+  "Консольные": 1,
+  "Прочие Авто-темы": 1,
+  "Верстка, CSS, HTML, SVG": 1,
+  "Естественные науки": 1,
+  "Бухгалтерия, Аудит, Налоги": 1,
+  "Прочие Авто-темы": 1,
+  "Веб-дизайн": 1,
+  "Офисная техника": 1,
+  "Прочие юридические вопросы": 1,
+  "Мобильные": 1,
+  "Десерты, Сладости, Выпечка": 1,
+  "Вторые блюда": 1,
+  "Сервис, Обслуживание, Тюнинг": 1,
+  "Мобильные устройства": 1,
+  "Строительство и Ремонт": 1,
+  "PHP": 1,
+  "Python": 1,
+  "Java": 1,
+  "JavaScript": 1,
+  "jQuery": 1,
+  "SQL": 1,
+  "Perl": 1,
+  "C#": 1,
+  "Ответы Mail.ru": 1,
+  "C/C++": 1,
+  "Почта Mail.ru": 1,
+  "Геометрия": 1,
+  "Android": 1,
+  "iOS": 1,
+  "Системное администрирование": 1,
+  
+  
+} 
+
+
+accept = driver.find_elements_by_xpath('//div[text() = " Продолжить просмотр "]')
+if len(accept): 
+  accept[0].click()
+
+def need_skip(data):
+  re = re.compile("Помогите найти")
+  if (re.match(data.lower) and len(data) <= 40):
+    return 1
+  re = re.compile("(вопрос|фото) внутри")
+  if (re.match(data.lower)):
+    return 1
+  return 0
+
+while 1:
+
+    show_more = driver.find_elements_by_xpath("//div[@size = 'promo']")
+
+    if (len(show_more) > 0): 
+      try:
+        new_count = driver.find_elements_by_xpath("//div[@size='promo']/span/i")[0].get_attribute('innerText')
+      except:   
+        continue 
+      #print(f'new count {new_count}')
+      show_more[0].click() 
+      time.sleep(3)
+      show = 1
+
+      whos = driver.find_elements_by_xpath("//div/div/div/div/div/div/div/div/span[1]/span/a") 
+      categories = driver.find_elements_by_xpath("//div/div/div/div/div/div/div/div/span[2]/span/a") 
+      #answers = driver.find_elements_by_xpath('//div/div/div/div/div/div/div/a[contains(@href, "/question/")]')
+      answers = driver.find_elements_by_xpath('//div/div/div/div/div/div/div[2]/a[contains(@href, "/question/")]')
+      #print('answers {0}, whos: {1}, categories: {2}'.format(len(answers), len(whos), len(categories)))
+      for answer in answers:
+
+          #print("FOUND") 
+          who = whos[show - 1].get_attribute('innerText')
+          category = categories[show - 1].get_attribute('innerText')
+
+          question = answer.get_attribute('innerText')
+          #print(f"FOUND question {question}") 
+
+          # send_data = question + "(" + who + ", " + category + ")" 
+          # send_data = question + "(" + category + ")" 
+          send_data = question 
+        
+          if send_data not in sended:
+              if category not in ignore and len(question) >= 18:
+                print(send_data,  flush=True)
+              sended[send_data] = 1
+
+          if (show == int(new_count)): 
+              break
+          show = show + 1
+      body.send_keys(Keys.HOME)
+            
+    time.sleep(3)
+        
+
+
+
+
+#for n in range(0, 60):
+#    time.sleep(5)
+#    body.send_keys(Keys.END)
+#
+#    tweets = driver.find_elements_by_xpath("//div[@lang = 'ru']/span")
+#    for tweet in tweets:
+#        try:
+#            print(tweet.get_attribute('innerText'))
+#        except:
+#            pass

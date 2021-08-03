@@ -1,0 +1,103 @@
+version: '3.7'
+
+services:
+  answers:
+    build: ./answers_spider
+    restart: always
+    image: metacoma/otvet:latest
+    environment:
+      DISPLAY: ':99'
+      OTVET_URL: https://otvet.mail.ru/
+    entrypoint:
+      - sh 
+      - -c 
+      - |
+        Xvfb :99 -screen 0 1024x748x24+32 -nolisten tcp &
+        # x11vnc -display :99 -bg -forever -nopw -quiet -listen 0.0.0.0 -xkb &
+        python3 /usr/local/bin/answers.py | python3 /usr/local/bin/parser.py |  websocat -s 0.0.0.0:1234
+    ports:
+      - 0.0.0.0:8080:1234
+    networks:
+      - answer
+
+  answers2telegram:
+    build: ./answers_spider
+    restart: always
+    image: metacoma/otvet:latest
+    tty: true
+    environment:
+      TELEGRAM_BOT_TOKEN: $TELEGRAM_BOT_TOKEN
+      TELEGRAM_CHAT_ID: $TELEGRAM_CHAT_ID
+    entrypoint:
+      - sh 
+      - -c 
+      - |
+        websocat ws://answers:1234 | tee | xargs -I{} sh -c '/usr/local/bin/send_message.sh "{}"' 
+    networks:
+      - answer
+    depends_on:
+      - answers
+      - telegrambot 
+        
+
+  answersadult:
+    build: ./answers_spider
+    restart: always
+    image: metacoma/otvet:latest
+    environment:
+      OTVET_URL: https://otvet.mail.ru/adult
+    entrypoint:
+      - sh 
+      - -c 
+      - |
+        Xvfb :99 -screen 0 1024x748x24+32 -nolisten tcp &
+        # x11vnc -display :99 -bg -forever -nopw -quiet -listen 0.0.0.0 -xkb &
+        python3 /usr/local/bin/answers.py | python3 /usr/local/bin/parser.py |  websocat -s 0.0.0.0:1234
+    ports:
+      - 0.0.0.0:8081:1234
+    networks:
+      - answer
+
+  answersadult2telegram:
+    build: ./answers_spider
+    restart: always
+    image: metacoma/otvet:latest
+    tty: true
+    environment:
+      TELEGRAM_BOT_TOKEN: $TELEGRAM_BOT_TOKEN
+      TELEGRAM_CHAT_ID: $TELEGRAM_CHAT_ID
+    entrypoint:
+      - sh 
+      - -c 
+      - |
+        websocat ws://answersadult:1234 | tee | xargs -I{} sh -c '/usr/local/bin/send_message.sh "{}"' 
+    networks:
+      - answer
+    depends_on:
+      - answersadult
+      - telegrambot
+
+  telegrambot:
+    restart: always
+    build:  ./telegram_bot
+    image: bot
+    tty: true
+    environment: 
+      TELEGRAM_TOKEN: $TELEGRAM_TOKEN
+      GOLD_CHAT_ID: $GOLD_CHAT_ID
+      PREMODERATION_CHAT_ID: $PREMODERATION_CHAT_ID
+      FLOW_CHAT_ID: $FLOW_CHAT_ID
+      MIRROR_TXT_CHANNEL: $MIRROR_TXT_CHANNEL
+      SQLITE_DB_PATH: $SQLITE_DB_PATH
+    volumes:
+      - ./data:/data
+    networks:
+      - answer
+    ports:
+      - 0.0.0.0:9090:9090
+
+networks:
+  answer:
+    external:
+      name: ${NETWORK:-answer}
+
