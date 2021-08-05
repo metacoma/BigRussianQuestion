@@ -119,6 +119,10 @@ func GenerateImage(text string, dst_file string) string {
         cmd := fmt.Sprintf("/image_generator/generate.sh '%s' > %s", text, dst_file)
         log.Printf("GenerateImage: %s\n", cmd)
         exec.Command("sh","-c",cmd).Output()
+
+        cmd = fmt.Sprintf("python3 /usr/local/bin/brq_upload_vk.py %s",dst_file)
+        exec.Command("sh","-c",cmd).Output()
+
         return dst_file
 }
 
