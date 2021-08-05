@@ -24,7 +24,15 @@ add_khokhoma() {
 } 
 
 add_watermark() {
-  convert png:- \( -background none -fill \#888 -font $FONT -pointSize 25 -gravity SouthWest -annotate +10+10 "t.me/BigRussianQuestion" \) png:-
+  convert png:- \( -background none -fill \#888 -font $FONT -pointSize 25 -gravity NorthWest -annotate +10+10 "t.me/BigRussianQuestion" \) png:-
+}
+
+add_watermark_twitter() {
+  convert png:- \( -background none -fill \#888 -font $FONT -pointSize 25 -gravity SouthWest -annotate +10+10 "twitter.com/QuestionRu" \) png:-
+}
+
+add_watermark_vk() {
+  convert png:- \( -background none -fill \#888 -font $FONT -pointSize 25 -gravity SouthEast -annotate +10+10 "vk.com/russian_q" \) png:-
 }
 
 any2png() {
@@ -32,4 +40,4 @@ any2png() {
 }
 
 
-any2png | fill_white | blur | add_text "$*" | add_watermark | add_khokhoma
+any2png | fill_white | blur | add_text "$*" | add_watermark | add_watermark_twitter | add_watermark_vk | add_khokhoma
