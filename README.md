@@ -2,7 +2,7 @@
 
 [Телеграмм](https://t.me/BigRussianQuestion)
 [Твиттер](https://twitter.com/QuestionRu)
-
+[Vk](https://vk.com/russian_q)
 
 ![result1](https://github.com/metacoma/BigRussianQuestion/blob/master/result/1.jpg?raw=true)
 ![result2](https://github.com/metacoma/BigRussianQuestion/blob/master/result/2.jpg?raw=true)
