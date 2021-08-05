@@ -89,6 +89,10 @@ services:
       FLOW_CHAT_ID: $FLOW_CHAT_ID
       MIRROR_TXT_CHANNEL: $MIRROR_TXT_CHANNEL
       SQLITE_DB_PATH: $SQLITE_DB_PATH
+      VK_GROUP_ID: $VK_GROUP_ID
+      VK_ALBUM_ID: $VK_ALBUM_ID
+      VK_TOKEN: $VK_TOKEN
+
     volumes:
       - ./data:/data
     networks:
