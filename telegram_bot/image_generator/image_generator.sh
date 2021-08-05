@@ -28,7 +28,7 @@ add_watermark() {
 }
 
 any2png() {
-  convert - -resize 1098x598 png:-
+  convert - -resize '1098x598^' png:-
 }
 
 
