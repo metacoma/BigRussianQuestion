@@ -248,7 +248,10 @@ func main() {
 
       callback_data := string(update.CallbackQuery.Data)
       if (update.CallbackQuery.ChatInstance == "786515482557635255") {
-        sendButton(PREMODERATION_CHAT_ID, getAnswerByTxtID(sqliteDatabase, callback_data), callback_data)
+
+        msg := fmt.Sprintf("%s: %s", update.CallbackQuery.From, getAnswerByTxtID(sqliteDatabase, callback_data))
+
+        sendButton(PREMODERATION_CHAT_ID, msg, callback_data)
         deleteMessageConfig := tgbotapi.NewDeleteMessage(FLOW_CHAT_ID, update.CallbackQuery.Message.MessageID)
         bot.DeleteMessage(deleteMessageConfig)
       }
