@@ -66,9 +66,20 @@ func gold(w http.ResponseWriter, r *http.Request) {
     fmt.Println("val:", strings.Join(v, ""))
   }
 
-  telegram_msg := tgbotapi.NewMessage(PREMODERATION_CHAT_ID, parsed["q"])
-  telegram_msg.ParseMode = tgbotapi.ModeHTML;
-  bot.Send(telegram_msg)
+  quote_text := parsed["q"]
+
+
+  message_id := getMessageIdByAnswer(sqliteDatabase, quote_text)
+
+  log.Printf("Gold: %s, message_id: %d", quote_text, message_id)
+
+  if (message_id != 0) {
+    message_id_txt := fmt.Sprintf("%d", message_id)
+    sendButton(PREMODERATION_CHAT_ID, quote_text, message_id_txt)
+  } else {
+    log.Fatal("No message_id for '%s'", quote_text)
+  }
+
   return
 }
 
@@ -139,6 +150,22 @@ func createTable(db *sql.DB) {
   }
   statement.Exec() // Execute SQL Statements
   log.Println("Answers table created")
+}
+
+func getMessageIdByAnswer(db *sql.DB, answer string) int64 {
+  q := fmt.Sprintf("SELECT message_id FROM answers WHERE answer = '%s'", answer)
+  row, err := db.Query(q)
+  if err != nil {
+    log.Fatal(err)
+  }
+  defer row.Close()
+  for row.Next() { // Iterate and fetch the records from result cursor
+    var message_id int64
+    row.Scan(&message_id)
+    return message_id
+  }
+
+  return 0
 }
 
 func getAnswer(db *sql.DB, message_id int64) string {
