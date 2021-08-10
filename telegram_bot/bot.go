@@ -69,16 +69,7 @@ func gold(w http.ResponseWriter, r *http.Request) {
   quote_text := parsed["q"]
 
 
-  message_id := getMessageIdByAnswer(sqliteDatabase, quote_text)
-
-  log.Printf("Gold: %s, message_id: %d", quote_text, message_id)
-
-  if (message_id != 0) {
-    message_id_txt := fmt.Sprintf("%d", message_id)
-    sendButton(PREMODERATION_CHAT_ID, quote_text, message_id_txt)
-  } else {
-    log.Fatal("No message_id for '%s'", quote_text)
-  }
+  sendButton(PREMODERATION_CHAT_ID, quote_text, "")
 
   return
 }
