@@ -98,10 +98,13 @@ func sendButton(dst_chat int64, text string, message_id string) {
       msg.ReplyMarkup = keyboard
       bot.Send(msg)
     } else {
+      markMessageAsGold(sqliteDatabase, message_id)
+      /*
       tmp_file := fmt.Sprintf("/tmp/image_%d.png", time.Now().Unix())
       GenerateImage(text, tmp_file)
       msg := tgbotapi.NewPhotoUpload(dst_chat, tmp_file)
       bot.Send(msg)
+      */
     }
 
   } else {
@@ -114,6 +117,18 @@ func sendButton(dst_chat int64, text string, message_id string) {
   }
 
 
+}
+
+func markMessageAsGold(db *sql.DB, message_id string) {
+  updateSQL := `UPDATE answers SET is_gold = 1 WHERE message_id = ?`
+  statement, err := db.Prepare(updateSQL)
+  if err != nil {
+    log.Fatalln(err.Error())
+  }
+  _, err = statement.Exec(message_id)
+  if err != nil {
+    log.Fatalln(err.Error())
+  }
 }
 
 func GenerateImage(text string, dst_file string) string {
