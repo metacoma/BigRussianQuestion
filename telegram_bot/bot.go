@@ -54,6 +54,50 @@ func questionHandler(w http.ResponseWriter, r *http.Request) {
   return
 }
 
+func sendGold(db *sql.DB) {
+  //q := fmt.Sprintf("select message_id, answer from answers where is_gold = 1 AND sent = 0 ORDER BY time DESC LIMIT 1")
+  q := fmt.Sprintf("select message_id, answer from answers where is_gold = 1 AND (sent = 0 OR sent IS NULL) ORDER BY time DESC LIMIT 1")
+  row, err := db.Query(q)
+  if err != nil {
+    log.Printf("Err query")
+    return
+  }
+  var message_id int64
+  var answer string
+  for row.Next() { // Iterate and fetch the records from result cursor
+    row.Scan(&message_id, &answer)
+    log.Printf("got golden %d answer: %s", message_id, answer)
+
+  }
+  row.Close()
+
+  tmp_file := fmt.Sprintf("/tmp/image_%d.png", time.Now().Unix())
+  GenerateImage(answer, tmp_file)
+  msg := tgbotapi.NewPhotoUpload(GOLD_CHAT_ID, tmp_file)
+  bot.Send(msg)
+  sentVk(tmp_file)
+
+  msg2 := tgbotapi.NewMessage(MIRROR_TXT_CHANNEL, answer)
+  bot.Send(msg2)
+
+  updateSQL := `UPDATE answers SET sent = 1 WHERE message_id = ?`
+  statement, err := db.Prepare(updateSQL)
+  if err != nil {
+    log.Fatalln(err.Error())
+  }
+  _, err = statement.Exec(message_id)
+  if err != nil {
+    log.Fatalln(err.Error())
+   }
+
+  return
+}
+
+func sendGoldHttpHandler(w http.ResponseWriter, r *http.Request) {
+  sendGold(sqliteDatabase)
+}
+
+
 func gold(w http.ResponseWriter, r *http.Request) {
 
   r.ParseForm()
@@ -77,6 +121,7 @@ func gold(w http.ResponseWriter, r *http.Request) {
 func httpServer() {
   http.HandleFunc("/question", questionHandler) // set router
   http.HandleFunc("/gold", gold) // 
+  http.HandleFunc("/sendGold", sendGoldHttpHandler) // 
   http.ListenAndServe(":9090", nil) // set listen port
 }
 
@@ -131,13 +176,15 @@ func markMessageAsGold(db *sql.DB, message_id string) {
   }
 }
 
+func sentVk(img_path string) {
+  cmd := fmt.Sprintf("python3 /usr/local/bin/brq_upload_vk.py %s", img_path)
+  exec.Command("sh","-c",cmd).Output()
+}
+
 func GenerateImage(text string, dst_file string) string {
         //cmd := fmt.Sprintf("cd /image_generator && cat /images/russianflow.jpg | ./image_generator.sh '%s' > %s", text, dst_file)
         cmd := fmt.Sprintf("/image_generator/generate.sh '%s' > %s", text, dst_file)
         log.Printf("GenerateImage: %s\n", cmd)
-        exec.Command("sh","-c",cmd).Output()
-
-        cmd = fmt.Sprintf("python3 /usr/local/bin/brq_upload_vk.py %s",dst_file)
         exec.Command("sh","-c",cmd).Output()
 
         return dst_file
@@ -271,8 +318,8 @@ func main() {
         deleteMessageConfig := tgbotapi.NewDeleteMessage(PREMODERATION_CHAT_ID, update.CallbackQuery.Message.MessageID)
         bot.DeleteMessage(deleteMessageConfig)
 
-        msg := tgbotapi.NewMessage(MIRROR_TXT_CHANNEL, getAnswerByTxtID(sqliteDatabase, callback_data))
-        bot.Send(msg)
+        //msg := tgbotapi.NewMessage(MIRROR_TXT_CHANNEL, getAnswerByTxtID(sqliteDatabase, callback_data))
+        //bot.Send(msg)
       }
 
       // always delete the message that was clicked
