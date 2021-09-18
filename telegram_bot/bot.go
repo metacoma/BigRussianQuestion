@@ -148,7 +148,8 @@ func createTable(db *sql.DB) {
     "message_id" integer NOT NULL PRIMARY KEY,   
     "answer" TEXT,    
     "is_gold" integer,
-    "time" integer
+    "time" integer,
+    "sent" integer
     );` // SQL Statement for Create Table
 
   log.Println("Create answers table...")
