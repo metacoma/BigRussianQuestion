@@ -14,11 +14,11 @@ services:
       - |
         Xvfb :99 -screen 0 1024x748x24+32 -nolisten tcp &
         # x11vnc -display :99 -bg -forever -nopw -quiet -listen 0.0.0.0 -xkb &
-        python3 /usr/local/bin/answers.py | python3 /usr/local/bin/parser.py |  websocat -s 0.0.0.0:1234
-    ports:
-      - 0.0.0.0:8080:1234
+        python3 /usr/local/bin/answers.py | websocat ws://websocketserver:1234
     networks:
       - answer
+    depends_on:
+      - websocketserver
 
   answers2telegram:
     build: ./answers_spider
@@ -32,7 +32,7 @@ services:
       - sh 
       - -c 
       - |
-        websocat ws://answers:1234 | tee | xargs -I{} sh -c '/usr/local/bin/send_message.sh "{}"' 
+        websocat ws://websocketserver:1234 | tee | xargs -I{} sh -c '/usr/local/bin/send_message.sh "{}"' 
     networks:
       - answer
     depends_on:
@@ -52,30 +52,11 @@ services:
       - |
         Xvfb :99 -screen 0 1024x748x24+32 -nolisten tcp &
         # x11vnc -display :99 -bg -forever -nopw -quiet -listen 0.0.0.0 -xkb &
-        python3 /usr/local/bin/answers.py | python3 /usr/local/bin/parser.py |  websocat -s 0.0.0.0:1234
-    ports:
-      - 0.0.0.0:8081:1234
-    networks:
-      - answer
-
-  answersadult2telegram:
-    build: ./answers_spider
-    restart: always
-    image: metacoma/otvet:latest
-    tty: true
-    environment:
-      TELEGRAM_BOT_TOKEN: $TELEGRAM_BOT_TOKEN
-      TELEGRAM_CHAT_ID: $TELEGRAM_CHAT_ID
-    entrypoint:
-      - sh 
-      - -c 
-      - |
-        websocat ws://answersadult:1234 | tee | xargs -I{} sh -c '/usr/local/bin/send_message.sh "{}"' 
+        python3 /usr/local/bin/answers.py | websocat ws://websocketserver:1234
     networks:
       - answer
     depends_on:
-      - answersadult
-      - telegrambot
+      - websocketserver
 
   telegrambot:
     restart: always
@@ -99,6 +80,37 @@ services:
       - answer
     ports:
       - 0.0.0.0:9090:9090
+
+  websocketserver:
+    build: ./answers_spider
+    restart: always
+    image: metacoma/otvet:latest
+    tty: true
+    entrypoint:
+      - sh
+      - -c
+      - |
+        websocat -t ws-l:0.0.0.0:1234 broadcast:mirror:
+
+        #websocat -s 0.0.0.0:1234 
+    networks:
+      - answer
+
+  russianquestion:
+    build: ./answers_spider
+    restart: always
+    image: metacoma/otvet:latest
+    entrypoint:
+      - sh 
+      - -c 
+      - |
+        websocat ws://websocketserver:1234 | python3 /usr/local/bin/parser.py  | websocat -s 0.0.0.0:1234
+    ports:
+      - 0.0.0.0:8080:1234
+    networks:
+      - answer
+    depends_on:
+      - websocketserver
 
 networks:
   answer:
