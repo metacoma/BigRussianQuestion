@@ -131,7 +131,9 @@ func GenerateImage(text string, dst_file string) string {
 func createTable(db *sql.DB) {
   createTableSQL := `CREATE TABLE answers (
     "message_id" integer NOT NULL PRIMARY KEY,   
-    "answer" TEXT    
+    "answer" TEXT,    
+    "is_gold" integer,
+    "time" integer
     );` // SQL Statement for Create Table
 
   log.Println("Create answers table...")
@@ -182,12 +184,12 @@ func getAnswerByTxtID(db *sql.DB, message_txt_id string) string {
 }
 
 func StoreAnswer(db *sql.DB, message_id int64, answer string) {
-  insertSQL := `INSERT INTO answers(message_id, answer) VALUES (?, ?)`
+  insertSQL := `INSERT INTO answers(message_id, answer, time) VALUES (?, ?, ?)`
   statement, err := db.Prepare(insertSQL)
   if err != nil {
     log.Fatalln(err.Error())
   }
-  _, err = statement.Exec(message_id, answer)
+  _, err = statement.Exec(message_id, answer, time.Now().Unix())
   if err != nil {
     log.Fatalln(err.Error())
   }
