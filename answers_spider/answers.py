@@ -1,9 +1,14 @@
+from __future__ import print_function
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import ui
+import sys
 import time
 import re
 import os
+
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
 
 #print("STARTED")
 
@@ -60,7 +65,20 @@ ignore = {
   "Android": 1,
   "iOS": 1,
   "Системное администрирование": 1,
-  
+  "ВУЗы, Колледжи": 1,
+  "Другие предметы": 1,
+  "Прочие юридические вопросы": 1,
+  "История": 1,
+  "Школы": 1,
+  "Физика": 1,
+  "Информатика": 1,
+  "География": 1,
+  "Алгебра": 1,
+  "Техника для дома": 1,
+  "Русский язык": 1,
+  "Биология": 1,
+  "Иностранные языки": 1,
+  "Математика": 1
   
 } 
 
@@ -103,6 +121,7 @@ while 1:
           who = whos[show - 1].get_attribute('innerText')
           category = categories[show - 1].get_attribute('innerText')
 
+
           question = answer.get_attribute('innerText')
           #print(f"FOUND question {question}") 
 
@@ -111,9 +130,12 @@ while 1:
           send_data = question 
         
           if send_data not in sended:
-              if category not in ignore and len(question) >= 18:
+              if category not in ignore and len(question) >= 35:
                 print(send_data,  flush=True)
+                eprint(send_data,  flush=True)
               sended[send_data] = 1
+          else:
+              eprint("SKIP " + send_data,  flush=True)
 
           if (show == int(new_count)): 
               break
