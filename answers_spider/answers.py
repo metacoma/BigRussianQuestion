@@ -77,6 +77,7 @@ ignore = {
   "Техника для дома": 1,
   "Русский язык": 1,
   "Биология": 1,
+  "Гражданское право": 1,
   "Иностранные языки": 1,
   "Математика": 1
   
@@ -88,12 +89,11 @@ if len(accept):
   accept[0].click()
 
 def need_skip(data):
-  re = re.compile("Помогите найти")
-  if (re.match(data.lower) and len(data) <= 40):
-    return 1
-  re = re.compile("(вопрос|фото) внутри")
-  if (re.match(data.lower)):
-    return 1
+  STOP_LIST = [".*Помогите найти.*", ".*(вопрос|фото) внутри.*", "79807422416", '.*см[\.]?\ внутри[\.]?', ".*см. вн.", '.*см вопрос', ".*\+СМ$", ".*см\+$"]
+  for i in STOP_LIST:
+    r = re.compile(i, re.IGNORECASE)
+    if (r.match(data)):
+      return 1
   return 0
 
 while 1:
@@ -130,12 +130,12 @@ while 1:
           send_data = question 
         
           if send_data not in sended:
-              if category not in ignore and len(question) >= 35:
+              if category not in ignore and not need_skip(question) and len(question) >= 35:
                 print(send_data,  flush=True)
                 eprint(send_data,  flush=True)
-              sended[send_data] = 1
-          else:
-              eprint("SKIP " + send_data,  flush=True)
+                sended[send_data] = 1
+              else:
+                eprint("SKIP " + send_data,  flush=True)
 
           if (show == int(new_count)): 
               break
