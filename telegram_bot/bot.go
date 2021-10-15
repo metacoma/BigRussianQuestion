@@ -56,7 +56,8 @@ func questionHandler(w http.ResponseWriter, r *http.Request) {
 
 func sendGold(db *sql.DB) {
   //q := fmt.Sprintf("select message_id, answer from answers where is_gold = 1 AND sent = 0 ORDER BY time DESC LIMIT 1")
-  q := fmt.Sprintf("select message_id, answer from answers where is_gold = 1 AND (sent = 0 OR sent IS NULL) ORDER BY time DESC LIMIT 1")
+  //q := fmt.Sprintf("select message_id, answer from answers where is_gold = 1 AND (sent = 0 OR sent IS NULL) ORDER BY time DESC LIMIT 1")
+  q := fmt.Sprintf("select message_id, answer from answers where is_gold = 1 AND (sent = 0 OR sent IS NULL) ORDER BY RANDOM() LIMIT 1")
   row, err := db.Query(q)
   if err != nil {
     log.Printf("Err query")
